@@ -1,0 +1,8 @@
+version: '3'
+services:
+  dynamodb:
+    image: savaki/dynamodb:latest
+    ports:
+      - "8000:8000"
+
+
