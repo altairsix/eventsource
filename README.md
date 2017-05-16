@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/altairsix/eventsource?status.svg)](https://godoc.org/github.com/altairsix/eventsource)
+
 ```eventsource``` is a Serverless event sourcing library for Go that attempts to 
 leverage the capabilities of AWS to simplify the development and operational 
 requirements for event sourcing projects.
