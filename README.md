@@ -5,7 +5,10 @@ leverage the capabilities of AWS to simplify the development and operational
 requirements for event sourcing projects.
 
 Take advantage of the scalability, high availability, clustering, and strong 
-security model you've come to know and love with AWS. 
+security model you've come to know and love with AWS.
+ 
+Serverless and accessible were significant design considerations in the creation of this 
+library.  What AWS can handled, I'd rather have AWS handle.
 
 ## Installation
 
