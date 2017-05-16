@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - 1.8
+
+install:
+  - go get github.com/apex/go-apex
+  - go get github.com/aws/aws-sdk-go
+  - go get github.com/pkg/errors
+  - go get github.com/stretchr/testify
+
