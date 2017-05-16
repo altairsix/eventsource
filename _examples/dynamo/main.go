@@ -21,7 +21,7 @@ type UserNameSet struct {
 	Name string
 }
 
-// UserLastSet defines an event via tags
+// UserEmailSet implements the eventsource.Event interface directly rather than using the eventsource.Model helper
 type UserEmailSet struct {
 	ID      string
 	Version int
