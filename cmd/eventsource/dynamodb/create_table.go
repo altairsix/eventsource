@@ -3,7 +3,6 @@ package dynamodb
 import (
 	"fmt"
 	"log"
-
 	"os"
 
 	"github.com/altairsix/eventsource/awscloud"
