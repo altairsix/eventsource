@@ -102,3 +102,13 @@ docker-compose up
 export DYNAMODB_ENDPOINT=http://localhost:8080
 go test ./...
 ```
+
+### Todo 
+
+- [ ] document singleton usage
+- [ ] implement dynamodb to sns lambda function
+- [ ] implement dynamodb to kinesis firehose lambda function
+- [ ] document stream replay via s3
+- [ ] add support for terraform in tooling
+
+
