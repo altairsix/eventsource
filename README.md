@@ -36,7 +36,7 @@ git is a great analogy. each commit becomes an event and when you clone or pull
 the repo, git uses that sequence of commits (events) to rebuild the project
 file structure (the domain model).
 
-Greg Young has an excellent primer on event source that can found on the 
+Greg Young has an excellent primer on event sourcing that can found on the 
 [EventStore docs page](http://docs.geteventstore.com/introduction/4.0.0/event-sourcing-basics/).
 
 ![Overview](https://s3.amazonaws.com/site-eventsource/Overview.png)
