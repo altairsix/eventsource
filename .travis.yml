@@ -8,4 +8,5 @@ install:
   - go get github.com/aws/aws-sdk-go
   - go get github.com/pkg/errors
   - go get github.com/stretchr/testify
+  - go get gopkg.in/urfave/cli.v1
 
