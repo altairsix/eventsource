@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
-
 	"strconv"
+	"time"
 
 	"github.com/altairsix/eventsource"
 	"github.com/altairsix/eventsource/dynamodbstore"
