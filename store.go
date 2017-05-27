@@ -38,9 +38,10 @@ type Store interface {
 	// Save the provided serialized records to the store
 	Save(ctx context.Context, aggregateID string, records ...Record) error
 
-	// Load the history of events up to the version specified; when version is
-	// 0, all events will be loaded
-	Load(ctx context.Context, aggregateID string, version int) (History, error)
+	// Load the history of events up to the version specified.
+	// When toVersion is 0, all events will be loaded.
+	// To start at the beginning, fromVersion should be set to 0
+	Load(ctx context.Context, aggregateID string, fromVersion, toVersion int) (History, error)
 }
 
 // memoryStore provides an in-memory implementation of Store
@@ -68,11 +69,20 @@ func (m *memoryStore) Save(ctx context.Context, aggregateID string, records ...R
 	return nil
 }
 
-func (m *memoryStore) Load(ctx context.Context, aggregateID string, version int) (History, error) {
-	history, ok := m.eventsByID[aggregateID]
+func (m *memoryStore) Load(ctx context.Context, aggregateID string, fromVersion, toVersion int) (History, error) {
+	all, ok := m.eventsByID[aggregateID]
 	if !ok {
 		return nil, NewError(nil, AggregateNotFound, "no aggregate found with id, %v", aggregateID)
 	}
 
-	return history, nil
+	history := make(History, 0, len(all))
+	if len(all) > 0 {
+		for _, record := range all {
+			if v := record.Version; v >= fromVersion && (toVersion == 0 || v <= toVersion) {
+				history = append(history, record)
+			}
+		}
+	}
+
+	return all, nil
 }

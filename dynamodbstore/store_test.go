@@ -64,7 +64,7 @@ func TestStore_SaveAndFetch(t *testing.T) {
 		err = store.Save(ctx, aggregateID, history...)
 		assert.Nil(t, err)
 
-		found, err := store.Load(ctx, aggregateID, 0)
+		found, err := store.Load(ctx, aggregateID, 0, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, history, found)
 		assert.Len(t, found, len(history))
@@ -114,7 +114,7 @@ func TestStore_SaveIdempotent(t *testing.T) {
 		// Then - verify no errors e.g. idempotent
 		assert.Nil(t, err)
 
-		found, err := store.Load(ctx, aggregateID, 0)
+		found, err := store.Load(ctx, aggregateID, 0, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, history, found)
 		assert.Len(t, found, len(history))
@@ -207,7 +207,7 @@ func TestStore_LoadPartition(t *testing.T) {
 		err = store.Save(ctx, aggregateID, history...)
 		assert.Nil(t, err)
 
-		found, err := store.Load(ctx, aggregateID, 1)
+		found, err := store.Load(ctx, aggregateID, 0, 1)
 		assert.Nil(t, err)
 		assert.Len(t, found, 1)
 		assert.Equal(t, history[0:1], found)

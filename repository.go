@@ -116,7 +116,7 @@ func (r *Repository) Save(ctx context.Context, events ...Event) error {
 
 // Load retrieves the specified aggregate from the underlying store
 func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, int, error) {
-	history, err := r.store.Load(ctx, aggregateID, 0)
+	history, err := r.store.Load(ctx, aggregateID, 0, 0)
 	if err != nil {
 		return nil, 0, err
 	}

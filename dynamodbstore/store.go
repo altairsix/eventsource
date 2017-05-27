@@ -6,10 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 	"sort"
 	"strconv"
-
-	"reflect"
 
 	"github.com/altairsix/eventsource"
 	"github.com/aws/aws-sdk-go/aws"
@@ -57,7 +56,7 @@ func (s *Store) checkIdempotent(ctx context.Context, aggregateID string, records
 	}
 
 	version := records[len(records)-1].Version
-	history, err := s.Load(ctx, aggregateID, version)
+	history, err := s.Load(ctx, aggregateID, 0, version)
 	if err != nil {
 		return err
 	}
@@ -105,14 +104,15 @@ func (s *Store) Save(ctx context.Context, aggregateID string, records ...eventso
 }
 
 // Load satisfies the Store interface and retrieve events from dynamodb
-func (s *Store) Load(ctx context.Context, aggregateID string, version int) (eventsource.History, error) {
-	partition := selectPartition(version, s.eventsPerItem)
-	input, err := makeQueryInput(s.tableName, s.hashKey, s.rangeKey, aggregateID, partition)
+func (s *Store) Load(ctx context.Context, aggregateID string, fromVersion, toVersion int) (eventsource.History, error) {
+	from := selectPartition(fromVersion, s.eventsPerItem)
+	to := selectPartition(toVersion, s.eventsPerItem)
+	input, err := makeQueryInput(s.tableName, s.hashKey, s.rangeKey, aggregateID, from, to)
 	if err != nil {
 		return nil, err
 	}
 
-	history := make(eventsource.History, 0, version)
+	history := make(eventsource.History, 0, toVersion)
 
 	var startKey map[string]*dynamodb.AttributeValue
 	for {
@@ -137,7 +137,7 @@ func (s *Store) Load(ctx context.Context, aggregateID string, version int) (even
 					return nil, err
 				}
 
-				if version > 0 && recordVersion > version {
+				if toVersion > 0 && recordVersion > toVersion {
 					continue
 				}
 
@@ -264,7 +264,7 @@ func makeUpdateItemInput(tableName, hashKey, rangeKey string, eventsPerItem int,
 
 // makeQueryInput
 //  - partition - fetch up to this partition number; 0 to fetch all partitions
-func makeQueryInput(tableName, hashKey, rangeKey string, aggregateID string, partition int) (*dynamodb.QueryInput, error) {
+func makeQueryInput(tableName, hashKey, rangeKey string, aggregateID string, fromPartition, toPartition int) (*dynamodb.QueryInput, error) {
 	input := &dynamodb.QueryInput{
 		TableName:      aws.String(tableName),
 		Select:         aws.String("ALL_ATTRIBUTES"),
@@ -277,13 +277,14 @@ func makeQueryInput(tableName, hashKey, rangeKey string, aggregateID string, par
 		},
 	}
 
-	if partition == 0 {
+	if toPartition == 0 {
 		input.KeyConditionExpression = aws.String("#key = :key")
 
 	} else {
-		input.KeyConditionExpression = aws.String("#key = :key AND #partition <= :partition")
+		input.KeyConditionExpression = aws.String("#key = :key AND #partition >= :from AND #partition <= :to")
 		input.ExpressionAttributeNames["#partition"] = aws.String(rangeKey)
-		input.ExpressionAttributeValues[":partition"] = &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(partition))}
+		input.ExpressionAttributeValues[":from"] = &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(fromPartition))}
+		input.ExpressionAttributeValues[":to"] = &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(toPartition))}
 	}
 
 	return input, nil

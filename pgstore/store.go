@@ -126,14 +126,14 @@ func (s *Store) isIdempotent(ctx context.Context, db DB, aggregateID string, rec
 
 // Load the history of events up to the version specified; when version is
 // 0, all events will be loaded
-func (s *Store) Load(ctx context.Context, aggregateID string, version int) (eventsource.History, error) {
+func (s *Store) Load(ctx context.Context, aggregateID string, fromVersion, toVersion int) (eventsource.History, error) {
 	db, err := s.accessor.Open(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "load failed; unable to connect to db")
 	}
 	defer s.accessor.Close(db)
 
-	return s.doLoad(ctx, db, aggregateID, 0, version)
+	return s.doLoad(ctx, db, aggregateID, fromVersion, toVersion)
 }
 
 func (s *Store) doLoad(ctx context.Context, db DB, aggregateID string, initialVersion, version int) (eventsource.History, error) {
