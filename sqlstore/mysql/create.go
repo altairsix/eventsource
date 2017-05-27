@@ -35,7 +35,12 @@ func expand(template, tableName string) string {
 	return strings.Replace(template, `${TABLE}`, tableName, -1)
 }
 
-func CreateIfNotExists(db *sql.DB, tableName string) error {
+type DB interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+}
+
+func CreateIfNotExists(db DB, tableName string) error {
 	_, err := db.Exec(expand(CreateSQL, tableName))
 	if err != nil {
 		return errors.Wrap(err, "unable to create table")

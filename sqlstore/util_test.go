@@ -11,7 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func WithRollback(t *testing.T, dialect sqlstore.Dialect, fn func(db *sql.DB)) {
+type DB interface {
+	sqlstore.DB
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+
+func WithRollback(t *testing.T, dialect sqlstore.Dialect, fn func(db DB, tableName string)) {
+	//tableName := "test" + strconv.Itoa(r.Intn(1000000))
 	tableName := "sample"
 	var db *sql.DB
 
@@ -23,9 +29,12 @@ func WithRollback(t *testing.T, dialect sqlstore.Dialect, fn func(db *sql.DB)) {
 		}
 		db = v
 
-		if err := mysql.CreateIfNotExists(db, tableName); err != nil {
-			t.Errorf("unable to create table, %v", err)
-			return
+		switch dialect {
+		case sqlstore.MySQL:
+			if err := mysql.CreateIfNotExists(db, tableName); err != nil {
+				t.Errorf("unable to create table, %v", err)
+				return
+			}
 		}
 
 	default:
@@ -39,7 +48,7 @@ func WithRollback(t *testing.T, dialect sqlstore.Dialect, fn func(db *sql.DB)) {
 	}
 	defer tx.Rollback()
 
-	fn(db)
+	fn(tx, tableName)
 }
 
 //
