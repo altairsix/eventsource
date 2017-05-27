@@ -23,8 +23,12 @@ func init() {
 		return defaultValue
 	}
 	user := env("MYSQL_TEST_USER", "altairsix")
-	pass := env("MYSQL_TEST_PASS", "password")
 	name := env("MYSQL_TEST_DBNAME", "altairsix")
+
+	pass := env("MYSQL_TEST_PASS", "password")
+	if pass != "" {
+		pass = ":" + pass
+	}
 
 	protocol := env("MYSQL_TEST_PROT", "tcp")
 	addr := env("MYSQL_TEST_ADDR", "localhost:3306")
@@ -32,7 +36,7 @@ func init() {
 	if protocol != "" && addr != "" {
 		netAddr = fmt.Sprintf("%s(%s)", protocol, addr)
 	}
-	dsn = fmt.Sprintf("%s:%s@%s/%s?charset=utf8", user, pass, netAddr, name)
+	dsn = fmt.Sprintf("%s%s@%s/%s?charset=utf8", user, pass, netAddr, name)
 }
 
 type DB interface {
