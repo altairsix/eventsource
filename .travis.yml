@@ -9,4 +9,20 @@ install:
   - go get github.com/pkg/errors
   - go get github.com/stretchr/testify
   - go get gopkg.in/urfave/cli.v1
+  - go get github.com/go-sql-driver/mysql
+  - go get github.com/go-sql-driver/mysql
+  - go get github.com/lib/pq
 
+services:
+  - mysql
+  - postgresql
+
+env:
+  - MYSQL_TEST_USER=root
+  - MYSQL_TEST_PASS=
+  - POSTGRES_TEST_USER=postgres
+  - POSTGRES_TEST_PASS=
+
+before_script:
+  - psql  -c 'CREATE DATABASE IF NOT EXISTS altairsix;' -U postgres
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS altairsix;'

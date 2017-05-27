@@ -2,12 +2,34 @@ package mysqlstore_test
 
 import (
 	"database/sql"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/altairsix/eventsource/mysqlstore"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
+
+var (
+	dsn string
+)
+
+func init() {
+	env := func(key, defaultValue string) string {
+		if value := os.Getenv(key); value != "" {
+			return value
+		}
+		return defaultValue
+	}
+	user := env("MYSQL_TEST_USER", "altairsix")
+	pass := env("MYSQL_TEST_PASS", "password")
+	prot := env("MYSQL_TEST_PROT", "tcp")
+	addr := env("MYSQL_TEST_ADDR", "localhost:3306")
+	dbname := env("MYSQL_TEST_DBNAME", "altairsix")
+	netAddr := fmt.Sprintf("%s(%s)", prot, addr)
+	dsn = fmt.Sprintf("%s:%s@%s/%s?charset=utf8", user, pass, netAddr, dbname)
+}
 
 type DB interface {
 	mysqlstore.DB
@@ -17,7 +39,7 @@ func WithRollback(t *testing.T, fn func(db DB, tableName string)) {
 	tableName := "sample"
 	var db *sql.DB
 
-	v, err := sql.Open("mysql", "altairsix:password@tcp(localhost:3306)/altairsix?charset=utf8")
+	v, err := sql.Open("mysql", dsn)
 	if !assert.Nil(t, err, "unable to open connection") {
 		return
 	}
