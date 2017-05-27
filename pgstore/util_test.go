@@ -24,17 +24,13 @@ func init() {
 		return defaultValue
 	}
 	user := env("POSTGRES_TEST_USER", "altairsix")
+	pass := env("POSTGRES_TEST_PASS", "password")
 	host := env("POSTGRES_TEST_HOST", "localhost")
 	port := env("POSTGRES_TEST_PORT", "5432")
 	dbname := env("POSTGRES_TEST_DBNAME", "altairsix")
-	dsn = fmt.Sprintf("host=%v port=%v user=%v dbname=%v sslmode=disable",
-		host, port, user, dbname,
+	dsn = fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable",
+		host, port, user, pass, dbname,
 	)
-
-	pass := env("POSTGRES_TEST_PASS", "password")
-	if pass != "" {
-		dsn += fmt.Sprintf(" password=%v", pass)
-	}
 }
 
 type DB interface {
