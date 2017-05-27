@@ -5,4 +5,13 @@ services:
     ports:
       - "8000:8000"
 
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_USER=altairsix
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=altairsix
 
