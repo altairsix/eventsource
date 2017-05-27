@@ -24,19 +24,15 @@ func init() {
 	}
 	user := env("MYSQL_TEST_USER", "altairsix")
 	name := env("MYSQL_TEST_DBNAME", "altairsix")
-
 	pass := env("MYSQL_TEST_PASS", "password")
-	if pass != "" {
-		pass = ":" + pass
-	}
-
 	protocol := env("MYSQL_TEST_PROT", "tcp")
 	addr := env("MYSQL_TEST_ADDR", "localhost:3306")
-	netAddr := ""
-	if protocol != "" && addr != "" {
-		netAddr = fmt.Sprintf("%s(%s)", protocol, addr)
-	}
+	netAddr := fmt.Sprintf("%s(%s)", protocol, addr)
 	dsn = fmt.Sprintf("%s%s@%s/%s?charset=utf8", user, pass, netAddr, name)
+
+	if os.Getenv("TRAVIS_BUILD_DIR") != "" {
+		dsn = fmt.Sprintf("%s@/%s?charset=utf8", user, name)
+	}
 }
 
 type DB interface {
