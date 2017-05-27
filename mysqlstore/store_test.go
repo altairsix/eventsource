@@ -1,36 +1,44 @@
-package sqlstore_test
+package mysqlstore_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/sqlstore"
+	"github.com/altairsix/eventsource/mysqlstore"
 	"github.com/stretchr/testify/assert"
 )
 
 type Accessor struct {
-	db sqlstore.DB
+	db mysqlstore.DB
 }
 
-func (a Accessor) Open(ctx context.Context) (sqlstore.DB, error) {
+func (a Accessor) Open(ctx context.Context) (mysqlstore.DB, error) {
 	return a.db, nil
 }
 
-func (a Accessor) Close(db sqlstore.DB) error {
+func (a Accessor) Close(db mysqlstore.DB) error {
 	return nil
 }
 
 func TestStore_ImplementsStore(t *testing.T) {
-	v, err := sqlstore.New(sqlstore.MySQL, "blah", nil)
+	v, err := mysqlstore.New("blah", nil)
 	assert.Nil(t, err)
 
 	var store eventsource.Store = v
 	assert.NotNil(t, store)
 }
 
+func TestStore_ImplementsStreamReader(t *testing.T) {
+	v, err := mysqlstore.New("blah", nil)
+	assert.Nil(t, err)
+
+	var reader eventsource.StreamReader = v
+	assert.NotNil(t, reader)
+}
+
 func TestStore_SaveEmpty(t *testing.T) {
-	s, err := sqlstore.New(sqlstore.MySQL, "blah", nil)
+	s, err := mysqlstore.New("blah", nil)
 	assert.Nil(t, err)
 
 	err = s.Save(context.Background(), "abc")
@@ -38,9 +46,9 @@ func TestStore_SaveEmpty(t *testing.T) {
 }
 
 func TestStore_SaveAndFetch(t *testing.T) {
-	WithRollback(t, sqlstore.MySQL, func(db DB, tableName string) {
+	WithRollback(t, func(db DB, tableName string) {
 		ctx := context.Background()
-		store, err := sqlstore.New(sqlstore.MySQL, tableName, Accessor{db: db})
+		store, err := mysqlstore.New(tableName, Accessor{db: db})
 		assert.Nil(t, err)
 
 		aggregateID := "abc"
@@ -68,10 +76,47 @@ func TestStore_SaveAndFetch(t *testing.T) {
 	})
 }
 
-func TestStore_SaveIdempotent(t *testing.T) {
-	WithRollback(t, sqlstore.MySQL, func(db DB, tableName string) {
+func TestStore_SaveAndRead(t *testing.T) {
+	WithRollback(t, func(db DB, tableName string) {
 		ctx := context.Background()
-		store, err := sqlstore.New(sqlstore.MySQL, tableName, Accessor{db: db})
+		store, err := mysqlstore.New(tableName, Accessor{db: db})
+		assert.Nil(t, err)
+
+		aggregateID := "abc"
+		history := eventsource.History{
+			{
+				Version: 1,
+				Data:    []byte("a"),
+			},
+			{
+				Version: 2,
+				Data:    []byte("b"),
+			},
+			{
+				Version: 3,
+				Data:    []byte("c"),
+			},
+		}
+		err = store.Save(ctx, aggregateID, history...)
+		assert.Nil(t, err)
+
+		found, err := store.Read(ctx, 0, len(history))
+		assert.Nil(t, err)
+		assert.Len(t, found, len(history))
+
+		for _, item := range found {
+			assert.NotZero(t, item.Offset)
+			assert.NotZero(t, item.AggregateID)
+			assert.NotZero(t, item.Data)
+			assert.NotZero(t, item.Version)
+		}
+	})
+}
+
+func TestStore_SaveIdempotent(t *testing.T) {
+	WithRollback(t, func(db DB, tableName string) {
+		ctx := context.Background()
+		store, err := mysqlstore.New(tableName, Accessor{db: db})
 		assert.Nil(t, err)
 
 		aggregateID := "abc"
@@ -108,8 +153,8 @@ func TestStore_SaveIdempotent(t *testing.T) {
 func TestStore_SaveOptimisticLock(t *testing.T) {
 	ctx := context.Background()
 
-	WithRollback(t, sqlstore.MySQL, func(db DB, tableName string) {
-		store, err := sqlstore.New(sqlstore.MySQL, tableName, Accessor{db: db})
+	WithRollback(t, func(db DB, tableName string) {
+		store, err := mysqlstore.New(tableName, Accessor{db: db})
 		assert.Nil(t, err)
 
 		aggregateID := "abc"
@@ -144,8 +189,8 @@ func TestStore_SaveOptimisticLock(t *testing.T) {
 }
 
 func TestStore_LoadPartition(t *testing.T) {
-	WithRollback(t, sqlstore.MySQL, func(db DB, tableName string) {
-		store, err := sqlstore.New(sqlstore.MySQL, tableName, Accessor{db: db})
+	WithRollback(t, func(db DB, tableName string) {
+		store, err := mysqlstore.New(tableName, Accessor{db: db})
 		assert.Nil(t, err)
 
 		aggregateID := "abc"
