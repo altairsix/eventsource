@@ -18,10 +18,7 @@ services:
   - postgresql
 
 env:
-- MYSQL_TEST_USER=root
-- MYSQL_TEST_PASS=
-- POSTGRES_TEST_USER=postgres
-- POSTGRES_TEST_PASS=
+  - MYSQL_TEST_USER=root MYSQL_TEST_PASS= POSTGRES_TEST_USER=postgres POSTGRES_TEST_PASS=
 
 before_script:
   - psql  -c 'CREATE DATABASE altairsix;' -U postgres
