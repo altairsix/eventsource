@@ -8,34 +8,37 @@ import (
 // Dispatcher represents a function to execute a command
 type Dispatcher interface {
 	// Dispatch calls the command using the repository associated with the dispatcher
-	Dispatch(ctx context.Context, command Command) error
+	Dispatch(ctx context.Context, command Command) (int, error)
 }
 
 // DispatcherFunc provides a convenience func form of Dispatcher
-type DispatcherFunc func(ctx context.Context, command Command) error
+type DispatcherFunc func(ctx context.Context, command Command) (int, error)
 
 // Dispatch satisfies the Dispatcher interface
-func (fn DispatcherFunc) Dispatch(ctx context.Context, command Command) error {
+func (fn DispatcherFunc) Dispatch(ctx context.Context, command Command) (int, error) {
 	return fn(ctx, command)
 }
 
 // NewDispatcher creates a new Dispatcher associated with the specified Repository
 func NewDispatcher(r *Repository) Dispatcher {
-	return DispatcherFunc(func(ctx context.Context, command Command) error {
-		aggregate, err := r.Load(ctx, command.AggregateID())
+	return DispatcherFunc(func(ctx context.Context, command Command) (int, error) {
+		aggregate, version, err := r.Load(ctx, command.AggregateID())
 		if err != nil {
 			aggregate = r.New()
 		}
 
 		h, ok := aggregate.(CommandHandler)
 		if !ok {
-			return fmt.Errorf("Aggregate, %v, does not implement CommandHandler", aggregate)
+			return 0, fmt.Errorf("Aggregate, %v, does not implement CommandHandler", aggregate)
 		}
 		events, err := h.Apply(ctx, command)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
-		return r.Save(ctx, events...)
+		if v := len(events); v > 0 {
+			version = events[v-1].EventVersion()
+		}
+		return version, r.Save(ctx, events...)
 	})
 }

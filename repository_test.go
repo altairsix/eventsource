@@ -2,10 +2,10 @@ package eventsource_test
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"testing"
 	"time"
+
+	"io/ioutil"
 
 	"github.com/altairsix/eventsource"
 	"github.com/pkg/errors"
@@ -68,7 +68,7 @@ func TestRegistry(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		repository := eventsource.New(&Entity{},
 			eventsource.WithSerializer(serializer),
-			eventsource.WithDebug(os.Stdout),
+			eventsource.WithDebug(ioutil.Discard),
 		)
 
 		// Test - Add an event to the store and verify we can recreate the object
@@ -84,9 +84,9 @@ func TestRegistry(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		v, err := repository.Load(ctx, id)
+		v, version, err := repository.Load(ctx, id)
 		assert.Nil(t, err, "expected successful load")
-		fmt.Printf("%#v\n", v)
+		assert.Equal(t, 1, version)
 
 		org, ok := v.(*Entity)
 		assert.True(t, ok)
@@ -102,8 +102,9 @@ func TestRegistry(t *testing.T) {
 		})
 		assert.Nil(t, err)
 
-		v, err = repository.Load(ctx, id)
+		v, version, err = repository.Load(ctx, id)
 		assert.Nil(t, err)
+		assert.Equal(t, 2, version)
 
 		org, ok = v.(*Entity)
 		assert.True(t, ok)
@@ -127,7 +128,7 @@ func TestRegistry(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		v, err := registry.Load(ctx, id)
+		v, _, err := registry.Load(ctx, id)
 		assert.Nil(t, err)
 		assert.Equal(t, name, v.(*Entity).Name)
 	})
@@ -145,7 +146,7 @@ func TestRegistry(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		v, err := registry.Load(ctx, id)
+		v, _, err := registry.Load(ctx, id)
 		assert.Nil(t, err)
 		assert.Equal(t, name, v.(*Entity).Name)
 	})
@@ -166,7 +167,7 @@ func TestAt(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
-	v, err := registry.Load(ctx, id)
+	v, _, err := registry.Load(ctx, id)
 	assert.Nil(t, err)
 
 	org := v.(*Entity)

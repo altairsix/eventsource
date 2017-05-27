@@ -115,32 +115,35 @@ func (r *Repository) Save(ctx context.Context, events ...Event) error {
 }
 
 // Load retrieves the specified aggregate from the underlying store
-func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, error) {
+func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, int, error) {
 	history, err := r.store.Load(ctx, aggregateID, 0)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	entryCount := len(history)
 	if entryCount == 0 {
-		return nil, errors.New("not found")
+		return nil, 0, errors.New("not found")
 	}
 
 	r.logf("Loaded %v event(s) for aggregate id, %v", entryCount, aggregateID)
 	aggregate := r.New()
 
+	version := 0
 	for _, record := range history {
 		event, err := r.serializer.UnmarshalEvent(record)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		err = aggregate.On(event)
 		if err != nil {
 			eventType, _ := EventType(event)
-			return nil, NewError(err, UnhandledEvent, "aggregate was unable to handle event, %v", eventType)
+			return nil, 0, NewError(err, UnhandledEvent, "aggregate was unable to handle event, %v", eventType)
 		}
+
+		version = record.Version
 	}
 
-	return aggregate, nil
+	return aggregate, version, nil
 }

@@ -28,7 +28,7 @@ func init() {
 	protocol := env("MYSQL_TEST_PROT", "tcp")
 	addr := env("MYSQL_TEST_ADDR", "localhost:3306")
 	netAddr := fmt.Sprintf("%s(%s)", protocol, addr)
-	dsn = fmt.Sprintf("%s%s@%s/%s?charset=utf8", user, pass, netAddr, name)
+	dsn = fmt.Sprintf("%s:%s@%s/%s?charset=utf8", user, pass, netAddr, name)
 
 	if os.Getenv("TRAVIS_BUILD_DIR") != "" {
 		dsn = fmt.Sprintf("%s@/%s?charset=utf8", user, name)

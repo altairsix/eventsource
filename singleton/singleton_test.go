@@ -164,20 +164,20 @@ func TestRegistry_Wrap(t *testing.T) {
 		err = registry.Reserve(ctx, resource, time.Hour)
 		assert.Nil(t, err)
 
-		fn := eventsource.DispatcherFunc(func(ctx context.Context, command eventsource.Command) error {
-			return nil
+		fn := eventsource.DispatcherFunc(func(ctx context.Context, command eventsource.Command) (int, error) {
+			return 0, nil
 		})
 		dispatcher := registry.Wrap(fn)
 
 		// the original allocator can dispatch the command
-		err = dispatcher.Dispatch(ctx, Command{
+		_, err = dispatcher.Dispatch(ctx, Command{
 			ID:    resource.ID,
 			Owner: resource.Owner,
 		})
 		assert.Nil(t, err)
 
 		// but another user cannot
-		err = dispatcher.Dispatch(ctx, Command{
+		_, err = dispatcher.Dispatch(ctx, Command{
 			ID:    resource.ID,
 			Owner: resource.Owner + "blah",
 		})
