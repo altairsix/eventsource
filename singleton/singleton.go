@@ -165,8 +165,8 @@ func (r *Registry) Release(ctx context.Context, resource Resource) error {
 // Wrap wraps a dispatcher with the singleton handler and returns a new dispatcher.
 // If any command implements singleton.Interface, the wrapped dispatcher will
 // attempt to reserve the specified resource for
-func (r *Registry) Wrap(dispatcher eventsource.Dispatcher) eventsource.Dispatcher {
-	return eventsource.DispatcherFunc(func(ctx context.Context, command eventsource.Command) (int, error) {
+func (r *Registry) Wrap(dispatcher Dispatcher) Dispatcher {
+	return DispatcherFunc(func(ctx context.Context, command eventsource.Command) (int, error) {
 		if v, ok := command.(Interface); ok {
 			resource, duration := v.Reserve()
 			err := r.Reserve(ctx, resource, duration)

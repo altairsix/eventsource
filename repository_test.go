@@ -84,9 +84,8 @@ func TestRegistry(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		v, version, err := repository.Load(ctx, id)
+		v, err := repository.Load(ctx, id)
 		assert.Nil(t, err, "expected successful load")
-		assert.Equal(t, 1, version)
 
 		org, ok := v.(*Entity)
 		assert.True(t, ok)
@@ -102,9 +101,8 @@ func TestRegistry(t *testing.T) {
 		})
 		assert.Nil(t, err)
 
-		v, version, err = repository.Load(ctx, id)
+		v, err = repository.Load(ctx, id)
 		assert.Nil(t, err)
-		assert.Equal(t, 2, version)
 
 		org, ok = v.(*Entity)
 		assert.True(t, ok)
@@ -128,7 +126,7 @@ func TestRegistry(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		v, _, err := registry.Load(ctx, id)
+		v, err := registry.Load(ctx, id)
 		assert.Nil(t, err)
 		assert.Equal(t, name, v.(*Entity).Name)
 	})
@@ -146,7 +144,7 @@ func TestRegistry(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		v, _, err := registry.Load(ctx, id)
+		v, err := registry.Load(ctx, id)
 		assert.Nil(t, err)
 		assert.Equal(t, name, v.(*Entity).Name)
 	})
@@ -167,7 +165,7 @@ func TestAt(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
-	v, _, err := registry.Load(ctx, id)
+	v, err := registry.Load(ctx, id)
 	assert.Nil(t, err)
 
 	org := v.(*Entity)

@@ -4,6 +4,8 @@
 leverage the capabilities of AWS to simplify the development and operational 
 requirements for event sourcing projects.
 
+This library is still under development and changes to the core api are likely.
+
 Take advantage of the scalability, high availability, clustering, and strong 
 security model you've come to know and love with AWS.
  
