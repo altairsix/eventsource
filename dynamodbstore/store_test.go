@@ -71,6 +71,50 @@ func TestStore_SaveAndFetch(t *testing.T) {
 	})
 }
 
+func TestStore_SaveAndLoadFromVersion(t *testing.T) {
+	t.Parallel()
+
+	endpoint := os.Getenv("DYNAMODB_ENDPOINT")
+	if endpoint == "" {
+		t.SkipNow()
+		return
+	}
+
+	api, err := awscloud.DynamoDB(dynamodbstore.DefaultRegion, endpoint)
+	assert.Nil(t, err)
+
+	TempTable(t, api, func(tableName string) {
+		ctx := context.Background()
+		store, err := dynamodbstore.New(tableName,
+			dynamodbstore.WithDynamoDB(api),
+		)
+		assert.Nil(t, err)
+
+		aggregateID := "abc"
+		history := eventsource.History{
+			{
+				Version: 1,
+				Data:    []byte("a"),
+			},
+			{
+				Version: 2,
+				Data:    []byte("b"),
+			},
+			{
+				Version: 3,
+				Data:    []byte("c"),
+			},
+		}
+		err = store.Save(ctx, aggregateID, history...)
+		assert.Nil(t, err)
+
+		found, err := store.Load(ctx, aggregateID, 2, 0)
+		assert.Nil(t, err)
+		assert.Equal(t, history[1:], found)
+		assert.Len(t, found, len(history)-1)
+	})
+}
+
 func TestStore_SaveIdempotent(t *testing.T) {
 	t.Parallel()
 

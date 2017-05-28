@@ -137,6 +137,9 @@ func (s *Store) Load(ctx context.Context, aggregateID string, fromVersion, toVer
 					return nil, err
 				}
 
+				if recordVersion < fromVersion {
+					continue
+				}
 				if toVersion > 0 && recordVersion > toVersion {
 					continue
 				}
