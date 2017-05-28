@@ -77,6 +77,21 @@ func (j *JSONSerializer) UnmarshalEvent(record Record) (Event, error) {
 	return v.(Event), nil
 }
 
+// MarshalAll is a utility that marshals all the events provided into a History object
+func (j *JSONSerializer) MarshalAll(events ...Event) (History, error) {
+	history := make(History, 0, len(events))
+
+	for _, event := range events {
+		record, err := j.MarshalEvent(event)
+		if err != nil {
+			return nil, err
+		}
+		history = append(history, record)
+	}
+
+	return history, nil
+}
+
 // NewJSONSerializer constructs a new JSONSerializer and populates it with the specified events.
 // Bind may be subsequently called to add more events.
 func NewJSONSerializer(events ...Event) *JSONSerializer {

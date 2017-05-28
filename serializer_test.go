@@ -33,3 +33,25 @@ func TestJSONSerializer(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, &event, found)
 }
+
+func TestJSONSerializer_MarshalAll(t *testing.T) {
+	event := EntitySetName{
+		Model: eventsource.Model{
+			ID:      "123",
+			Version: 456,
+		},
+		Name: "blah",
+	}
+
+	serializer := eventsource.NewJSONSerializer(event)
+	history, err := serializer.MarshalAll(event)
+	assert.Nil(t, err)
+	assert.NotNil(t, history)
+
+	v, err := serializer.UnmarshalEvent(history[0])
+	assert.Nil(t, err)
+
+	found, ok := v.(*EntitySetName)
+	assert.True(t, ok)
+	assert.Equal(t, &event, found)
+}
