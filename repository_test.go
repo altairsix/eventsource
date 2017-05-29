@@ -43,7 +43,7 @@ func (item *Entity) On(event eventsource.Event) error {
 		item.UpdatedAt = v.Model.At
 
 	default:
-		return errors.New(eventsource.UnhandledEvent)
+		return errors.New(eventsource.ErrUnhandledEvent)
 	}
 
 	return nil
@@ -54,6 +54,17 @@ func TestNew(t *testing.T) {
 	aggregate := repository.New()
 	assert.NotNil(t, aggregate)
 	assert.Equal(t, &Entity{}, aggregate)
+}
+
+func TestRepository_Load_NotFound(t *testing.T) {
+	ctx := context.Background()
+	repository := eventsource.New(&Entity{},
+		eventsource.WithDebug(ioutil.Discard),
+	)
+
+	_, err := repository.Load(ctx, "does-not-exist")
+	assert.NotNil(t, err)
+	assert.True(t, eventsource.IsNotFound(err))
 }
 
 func TestRegistry(t *testing.T) {

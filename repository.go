@@ -2,7 +2,6 @@ package eventsource
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -123,7 +122,7 @@ func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, e
 
 	entryCount := len(history)
 	if entryCount == 0 {
-		return nil, errors.New("not found")
+		return nil, NewError(nil, ErrAggregateNotFound, "unable to load %v, %v", r.New(), aggregateID)
 	}
 
 	r.logf("Loaded %v event(s) for aggregate id, %v", entryCount, aggregateID)
@@ -138,7 +137,7 @@ func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, e
 		err = aggregate.On(event)
 		if err != nil {
 			eventType, _ := EventType(event)
-			return nil, NewError(err, UnhandledEvent, "aggregate was unable to handle event, %v", eventType)
+			return nil, NewError(err, ErrUnhandledEvent, "aggregate was unable to handle event, %v", eventType)
 		}
 	}
 

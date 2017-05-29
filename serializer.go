@@ -46,7 +46,7 @@ func (j *JSONSerializer) MarshalEvent(v Event) (Record, error) {
 		Data: json.RawMessage(data),
 	})
 	if err != nil {
-		return Record{}, NewError(err, InvalidEncoding, "unable to encode event")
+		return Record{}, NewError(err, ErrInvalidEncoding, "unable to encode event")
 	}
 
 	return Record{
@@ -60,18 +60,18 @@ func (j *JSONSerializer) UnmarshalEvent(record Record) (Event, error) {
 	wrapper := jsonEvent{}
 	err := json.Unmarshal(record.Data, &wrapper)
 	if err != nil {
-		return nil, NewError(err, InvalidEncoding, "unable to unmarshal event")
+		return nil, NewError(err, ErrInvalidEncoding, "unable to unmarshal event")
 	}
 
 	t, ok := j.eventTypes[wrapper.Type]
 	if !ok {
-		return nil, NewError(err, UnboundEventType, "unbound event type, %v", wrapper.Type)
+		return nil, NewError(err, ErrUnboundEventType, "unbound event type, %v", wrapper.Type)
 	}
 
 	v := reflect.New(t).Interface()
 	err = json.Unmarshal(wrapper.Data, v)
 	if err != nil {
-		return nil, NewError(err, InvalidEncoding, "unable to unmarshal event data into %#v", v)
+		return nil, NewError(err, ErrInvalidEncoding, "unable to unmarshal event data into %#v", v)
 	}
 
 	return v.(Event), nil

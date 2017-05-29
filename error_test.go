@@ -25,3 +25,33 @@ func TestNewError(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, v.Error(), s.String())
 }
+
+func TestIsNotFound(t *testing.T) {
+	testCases := map[string]struct {
+		Err        error
+		IsNotFound bool
+	}{
+		"nil": {
+			Err:        nil,
+			IsNotFound: false,
+		},
+		"eventsource.Error": {
+			Err:        eventsource.NewError(nil, eventsource.ErrAggregateNotFound, "not found"),
+			IsNotFound: true,
+		},
+		"nested eventsource.Error": {
+			Err: eventsource.NewError(
+				eventsource.NewError(nil, eventsource.ErrAggregateNotFound, "not found"),
+				eventsource.ErrUnboundEventType,
+				"not found",
+			),
+			IsNotFound: true,
+		},
+	}
+
+	for label, tc := range testCases {
+		t.Run(label, func(t *testing.T) {
+			assert.Equal(t, tc.IsNotFound, eventsource.IsNotFound(tc.Err))
+		})
+	}
+}

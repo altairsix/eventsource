@@ -13,18 +13,18 @@ const (
 	//InvalidVersion    = "InvalidVersion"
 
 	// InvalidEncoding is returned when the Serializer cannot marshal the event
-	InvalidEncoding = "InvalidEncoding"
+	ErrInvalidEncoding = "InvalidEncoding"
 
 	// UnboundEventType when the Serializer cannot unmarshal the serialized event
-	UnboundEventType = "UnboundEventType"
+	ErrUnboundEventType = "UnboundEventType"
 
 	// AggregateNotFound will be returned when attempting to Load an aggregateID
 	// that does not exist in the Store
-	AggregateNotFound = "AggregateNotFound"
+	ErrAggregateNotFound = "AggregateNotFound"
 
 	// UnhandledEvent occurs when the Aggregate is unable to handle an event and returns
 	// a non-nill err
-	UnhandledEvent = "UnhandledEvent"
+	ErrUnhandledEvent = "UnhandledEvent"
 )
 
 // Error provides a standardized error interface for eventsource
@@ -60,4 +60,26 @@ func NewError(err error, code, format string, args ...interface{}) error {
 		message: fmt.Sprintf(format, args...),
 		cause:   err,
 	}
+}
+
+// IsNotFound returns true if the issue as the aggregate was not found
+func IsNotFound(err error) bool {
+	for err != nil {
+		if err == nil {
+			return false
+		}
+
+		v, ok := err.(Error)
+		if !ok {
+			return false
+		}
+
+		if v.Code() == ErrAggregateNotFound {
+			return true
+		}
+
+		err = v.Cause()
+	}
+
+	return false
 }

@@ -72,7 +72,7 @@ func (m *memoryStore) Save(ctx context.Context, aggregateID string, records ...R
 func (m *memoryStore) Load(ctx context.Context, aggregateID string, fromVersion, toVersion int) (History, error) {
 	all, ok := m.eventsByID[aggregateID]
 	if !ok {
-		return nil, NewError(nil, AggregateNotFound, "no aggregate found with id, %v", aggregateID)
+		return nil, NewError(nil, ErrAggregateNotFound, "no aggregate found with id, %v", aggregateID)
 	}
 
 	history := make(History, 0, len(all))
