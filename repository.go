@@ -23,6 +23,7 @@ type Repository struct {
 	prototype  reflect.Type
 	store      Store
 	serializer Serializer
+	observers  []func(Event)
 	writer     io.Writer
 	debug      bool
 }
@@ -50,6 +51,14 @@ func WithStore(store Store) Option {
 func WithSerializer(serializer Serializer) Option {
 	return func(r *Repository) {
 		r.serializer = serializer
+	}
+}
+
+// WithObservers allows observers to watch the saved events; Observers should invoke very short lived operations as
+// calls will block until the observer is finished
+func WithObservers(observers ...func(event Event)) Option {
+	return func(r *Repository) {
+		r.observers = append(r.observers, observers...)
 	}
 }
 
@@ -159,5 +168,19 @@ func (r *Repository) Dispatch(ctx context.Context, command Command) error {
 		return err
 	}
 
-	return r.Save(ctx, events...)
+	err = r.Save(ctx, events...)
+	if err != nil {
+		return err
+	}
+
+	// publish events to observers
+	if r.observers != nil {
+		for _, event := range events {
+			for _, observer := range r.observers {
+				observer(event)
+			}
+		}
+	}
+
+	return nil
 }

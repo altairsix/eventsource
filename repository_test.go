@@ -49,6 +49,20 @@ func (item *Entity) On(event eventsource.Event) error {
 	return nil
 }
 
+type CreateEntity struct {
+	eventsource.CommandModel
+}
+
+func (item *Entity) Apply(ctx context.Context, command eventsource.Command) ([]eventsource.Event, error) {
+	switch command.(type) {
+	case *CreateEntity:
+		return []eventsource.Event{&EntityCreated{}}, nil
+
+	default:
+		return []eventsource.Event{}, nil
+	}
+}
+
 func TestNew(t *testing.T) {
 	repository := eventsource.New(&Entity{})
 	aggregate := repository.New()
@@ -188,4 +202,34 @@ func TestRepository_SaveNoEvents(t *testing.T) {
 	repository := eventsource.New(&Entity{})
 	err := repository.Save(context.Background())
 	assert.Nil(t, err)
+}
+
+func TestWithObservers(t *testing.T) {
+	captured := []eventsource.Event{}
+	observer := func(event eventsource.Event) {
+		captured = append(captured, event)
+	}
+
+	repository := eventsource.New(&Entity{},
+		eventsource.WithSerializer(
+			eventsource.NewJSONSerializer(
+				EntityCreated{},
+				EntityNameSet{},
+			),
+		),
+		eventsource.WithDebug(ioutil.Discard),
+		eventsource.WithObservers(observer),
+	)
+
+	ctx := context.Background()
+
+	// When I dispatch command
+	err := repository.Dispatch(ctx, &CreateEntity{})
+
+	// Then I expect event to be captured
+	assert.Nil(t, err)
+	assert.Len(t, captured, 1)
+
+	_, ok := captured[0].(*EntityCreated)
+	assert.True(t, ok)
 }
