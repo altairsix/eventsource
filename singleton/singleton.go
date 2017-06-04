@@ -3,13 +3,13 @@ package singleton
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"math"
+	"time"
 
 	"github.com/altairsix/eventsource"
 	"github.com/altairsix/eventsource/awscloud"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
@@ -26,6 +26,10 @@ const (
 
 	// ExpiresField is the field that holds the expires data
 	ExpiresField = "expires"
+)
+
+const (
+	ErrIsAlreadyReserved = "err:singleton:already_reserved"
 )
 
 // Option provides flexibility for configuring a singleton
@@ -171,12 +175,20 @@ func (r *Registry) Wrap(dispatcher Dispatcher) Dispatcher {
 			resource, duration := v.Reserve()
 			err := r.Reserve(ctx, resource, duration)
 			if err != nil {
+				if v, ok := err.(awserr.Error); ok && v.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+					return eventsource.NewError(err, ErrIsAlreadyReserved, "%v resource already exists, %v", resource.Type, resource.ID)
+				}
 				return err
 			}
 		}
 
 		return dispatcher.Dispatch(ctx, command)
 	})
+}
+
+// IsAlreadyReserved returns true if the error indicates the resource already exists and is reserved by someone else
+func IsAlreadyReserved(err error) bool {
+	return eventsource.ErrHasCode(err, ErrIsAlreadyReserved)
 }
 
 // New constructs a new singleton registry to simplify access to resoure reservations

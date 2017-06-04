@@ -62,6 +62,28 @@ func NewError(err error, code, format string, args ...interface{}) error {
 	}
 }
 
+// ErrHasCode returns true if any error in the cause chain has the specified code
+func ErrHasCode(err error, code string) bool {
+	if err == nil {
+		return false
+	}
+
+	v, ok := err.(Error)
+	if !ok {
+		return false
+	}
+
+	if v.Code() == code {
+		return true
+	}
+
+	if cause := v.Cause(); cause != nil {
+		return ErrHasCode(cause, code)
+	}
+
+	return false
+}
+
 // IsNotFound returns true if the issue as the aggregate was not found
 func IsNotFound(err error) bool {
 	for err != nil {

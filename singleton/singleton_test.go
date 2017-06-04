@@ -182,6 +182,7 @@ func TestRegistry_Wrap(t *testing.T) {
 			Owner: resource.Owner + "blah",
 		})
 		assert.NotNil(t, err)
+		assert.True(t, singleton.IsAlreadyReserved(err))
 	})
 }
 

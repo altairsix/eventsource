@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/altairsix/eventsource"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,6 +53,34 @@ func TestIsNotFound(t *testing.T) {
 	for label, tc := range testCases {
 		t.Run(label, func(t *testing.T) {
 			assert.Equal(t, tc.IsNotFound, eventsource.IsNotFound(tc.Err))
+		})
+	}
+}
+
+func TestErrHasCode(t *testing.T) {
+	code := "code"
+
+	testCases := map[string]struct {
+		Err        error
+		ErrHasCode bool
+	}{
+		"simple": {
+			Err:        eventsource.NewError(nil, code, "blah"),
+			ErrHasCode: true,
+		},
+		"nope": {
+			Err:        errors.New("blah"),
+			ErrHasCode: false,
+		},
+		"nested": {
+			Err:        eventsource.NewError(eventsource.NewError(nil, code, "blah"), "blah", "blah"),
+			ErrHasCode: true,
+		},
+	}
+
+	for label, tc := range testCases {
+		t.Run(label, func(t *testing.T) {
+			assert.Equal(t, tc.ErrHasCode, eventsource.ErrHasCode(tc.Err, code))
 		})
 	}
 }
