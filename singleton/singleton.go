@@ -166,12 +166,12 @@ func (r *Registry) Release(ctx context.Context, resource Resource) error {
 // If any command implements singleton.Interface, the wrapped dispatcher will
 // attempt to reserve the specified resource for
 func (r *Registry) Wrap(dispatcher Dispatcher) Dispatcher {
-	return DispatcherFunc(func(ctx context.Context, command eventsource.Command) (int, error) {
+	return DispatcherFunc(func(ctx context.Context, command eventsource.Command) error {
 		if v, ok := command.(Interface); ok {
 			resource, duration := v.Reserve()
 			err := r.Reserve(ctx, resource, duration)
 			if err != nil {
-				return 0, err
+				return err
 			}
 		}
 
