@@ -2,6 +2,7 @@ package eventsource
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -154,7 +155,15 @@ func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, e
 }
 
 func (r *Repository) Dispatch(ctx context.Context, command Command) error {
-	aggregate, err := r.Load(ctx, command.AggregateID())
+	if command == nil {
+		return errors.New("Command provided to Repository.Dispatch may not be nil")
+	}
+	aggregateID := command.AggregateID()
+	if aggregateID == "" {
+		return errors.New("Command provided to Repository.Dispatch may not contain a blank AggregateID")
+	}
+
+	aggregate, err := r.Load(ctx, aggregateID)
 	if err != nil {
 		aggregate = r.New()
 	}

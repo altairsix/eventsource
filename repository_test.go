@@ -224,7 +224,9 @@ func TestWithObservers(t *testing.T) {
 	ctx := context.Background()
 
 	// When I dispatch command
-	err := repository.Dispatch(ctx, &CreateEntity{})
+	err := repository.Dispatch(ctx, &CreateEntity{
+		CommandModel: eventsource.CommandModel{ID: "abc"},
+	})
 
 	// Then I expect event to be captured
 	assert.Nil(t, err)
