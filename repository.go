@@ -193,3 +193,13 @@ func (r *Repository) Dispatch(ctx context.Context, command Command) error {
 
 	return nil
 }
+
+// Store returns the underlying Store
+func (r *Repository) Store() Store {
+	return r.store
+}
+
+// Serializer returns the underlying serializer
+func (r *Repository) Serializer() Serializer {
+	return r.serializer
+}
