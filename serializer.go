@@ -2,7 +2,12 @@ package eventsource
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"reflect"
+
+	"github.com/altairsix/eventsource/internal"
+	"github.com/golang/protobuf/proto"
 )
 
 // Serializer converts between Events and Records
@@ -101,4 +106,60 @@ func NewJSONSerializer(events ...Event) *JSONSerializer {
 	serializer.Bind(events...)
 
 	return serializer
+}
+
+func NewProtoSerializer() *ProtoSerializer {
+	return &ProtoSerializer{}
+}
+
+type ProtoSerializer struct {
+}
+
+func (p *ProtoSerializer) MarshalEvent(v Event) (Record, error) {
+	pb, ok := v.(proto.Message)
+	if !ok {
+		return Record{}, errors.New("Unable to marshal non proto event")
+	}
+
+	buf, err := proto.Marshal(pb)
+	if err != nil {
+		return Record{}, err
+	}
+
+	data, err := proto.Marshal(&internal.Envelope{
+		Type: proto.MessageName(pb),
+		Data: buf,
+	})
+
+	if err != nil {
+		return Record{}, err
+	}
+
+	return Record{
+		Version: v.EventVersion(),
+		Data:    data,
+	}, nil
+}
+
+func (p *ProtoSerializer) UnmarshalEvent(record Record) (Event, error) {
+	var envelope internal.Envelope
+	if err := proto.Unmarshal(record.Data, &envelope); err != nil {
+		return nil, err
+	}
+
+	t := proto.MessageType(envelope.Type)
+	if t == nil {
+		return nil, fmt.Errorf("proto.MessageType unknown for %q", envelope.Type)
+	}
+
+	v := reflect.New(t.Elem()).Interface().(proto.Message)
+	if err := proto.Unmarshal(envelope.Data, v); err != nil {
+		return nil, err
+	}
+
+	event, ok := v.(Event)
+	if !ok {
+		return nil, fmt.Errorf("Unable to cast %T to Event", v)
+	}
+	return event, nil
 }
