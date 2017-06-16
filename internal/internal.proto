@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package internal;
+
+message Envelope {
+    string type = 1;
+    bytes  data = 2;
+}
