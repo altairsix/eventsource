@@ -5,7 +5,7 @@ import "context"
 // StreamRecord provides a serialized version of the event stream
 type StreamRecord struct {
 	Record
-	Offset      int
+	Offset      int64
 	AggregateID string
 }
 
@@ -15,5 +15,5 @@ type StreamRecord struct {
 type StreamReader interface {
 	// Read reads the next recordCount records from the event store starting at the specified
 	// offset
-	Read(ctx context.Context, startingOffset, recordCount int) ([]StreamRecord, error)
+	Read(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error)
 }
