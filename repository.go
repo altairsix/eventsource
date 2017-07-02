@@ -125,61 +125,84 @@ func (r *Repository) Save(ctx context.Context, events ...Event) error {
 
 // Load retrieves the specified aggregate from the underlying store
 func (r *Repository) Load(ctx context.Context, aggregateID string) (Aggregate, error) {
+	v, _, err := r.loadVersion(ctx, aggregateID)
+	return v, err
+}
+
+// loadVersion loads the specified aggregate from the store and returns both the Aggregate and the
+// current version number of the aggregate
+func (r *Repository) loadVersion(ctx context.Context, aggregateID string) (Aggregate, int, error) {
 	history, err := r.store.Load(ctx, aggregateID, 0, 0)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	entryCount := len(history)
 	if entryCount == 0 {
-		return nil, NewError(nil, ErrAggregateNotFound, "unable to load %v, %v", r.New(), aggregateID)
+		return nil, 0, NewError(nil, ErrAggregateNotFound, "unable to load %v, %v", r.New(), aggregateID)
 	}
 
 	r.logf("Loaded %v event(s) for aggregate id, %v", entryCount, aggregateID)
 	aggregate := r.New()
 
+	version := 0
 	for _, record := range history {
 		event, err := r.serializer.UnmarshalEvent(record)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		err = aggregate.On(event)
 		if err != nil {
 			eventType, _ := EventType(event)
-			return nil, NewError(err, ErrUnhandledEvent, "aggregate was unable to handle event, %v", eventType)
+			return nil, 0, NewError(err, ErrUnhandledEvent, "aggregate was unable to handle event, %v", eventType)
 		}
+
+		version = event.EventVersion()
 	}
 
-	return aggregate, nil
+	return aggregate, version, nil
 }
 
+// Dispatch executes the command specified
+//
+// Deprecated: Use Apply instead
 func (r *Repository) Dispatch(ctx context.Context, command Command) error {
+	_, err := r.Apply(ctx, command)
+	return err
+}
+
+// Apply executes the command specified and returns the current version of the aggregate
+func (r *Repository) Apply(ctx context.Context, command Command) (int, error) {
 	if command == nil {
-		return errors.New("Command provided to Repository.Dispatch may not be nil")
+		return 0, errors.New("Command provided to Repository.Dispatch may not be nil")
 	}
 	aggregateID := command.AggregateID()
 	if aggregateID == "" {
-		return errors.New("Command provided to Repository.Dispatch may not contain a blank AggregateID")
+		return 0, errors.New("Command provided to Repository.Dispatch may not contain a blank AggregateID")
 	}
 
-	aggregate, err := r.Load(ctx, aggregateID)
+	aggregate, version, err := r.loadVersion(ctx, aggregateID)
 	if err != nil {
 		aggregate = r.New()
 	}
 
 	h, ok := aggregate.(CommandHandler)
 	if !ok {
-		return fmt.Errorf("Aggregate, %v, does not implement CommandHandler", aggregate)
+		return 0, fmt.Errorf("Aggregate, %v, does not implement CommandHandler", aggregate)
 	}
 	events, err := h.Apply(ctx, command)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	err = r.Save(ctx, events...)
 	if err != nil {
-		return err
+		return 0, err
+	}
+
+	if v := len(events); v > 0 {
+		version = events[v-1].EventVersion()
 	}
 
 	// publish events to observers
@@ -191,7 +214,7 @@ func (r *Repository) Dispatch(ctx context.Context, command Command) error {
 		}
 	}
 
-	return nil
+	return version, nil
 }
 
 // Store returns the underlying Store

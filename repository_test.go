@@ -2,10 +2,9 @@ package eventsource_test
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 	"time"
-
-	"io/ioutil"
 
 	"github.com/altairsix/eventsource"
 	"github.com/pkg/errors"
@@ -53,10 +52,23 @@ type CreateEntity struct {
 	eventsource.CommandModel
 }
 
+type Nop struct {
+	eventsource.CommandModel
+}
+
 func (item *Entity) Apply(ctx context.Context, command eventsource.Command) ([]eventsource.Event, error) {
 	switch command.(type) {
 	case *CreateEntity:
-		return []eventsource.Event{&EntityCreated{}}, nil
+		return []eventsource.Event{&EntityCreated{
+			Model: eventsource.Model{
+				ID:      command.AggregateID(),
+				Version: item.Version + 1,
+				At:      time.Now(),
+			},
+		}}, nil
+
+	case *Nop:
+		return []eventsource.Event{}, nil
 
 	default:
 		return []eventsource.Event{}, nil
@@ -234,4 +246,49 @@ func TestWithObservers(t *testing.T) {
 
 	_, ok := captured[0].(*EntityCreated)
 	assert.True(t, ok)
+}
+
+func TestApply(t *testing.T) {
+	repo := eventsource.New(&Entity{},
+		eventsource.WithSerializer(
+			eventsource.NewJSONSerializer(
+				EntityCreated{},
+			),
+		),
+	)
+
+	cmd := &CreateEntity{CommandModel: eventsource.CommandModel{ID: "123"}}
+
+	// When
+	version, err := repo.Apply(context.Background(), cmd)
+
+	// Then
+	assert.Nil(t, err)
+	assert.Equal(t, 1, version)
+
+	// And
+	version, err = repo.Apply(context.Background(), cmd)
+
+	// Then
+	assert.Nil(t, err)
+	assert.Equal(t, 2, version)
+}
+
+func TestApplyNopCommand(t *testing.T) {
+	t.Run("Version still returned when command generates no events", func(t *testing.T) {
+		repo := eventsource.New(&Entity{},
+			eventsource.WithSerializer(
+				eventsource.NewJSONSerializer(
+					EntityCreated{},
+				),
+			),
+		)
+
+		cmd := &Nop{
+			CommandModel: eventsource.CommandModel{ID: "abc"},
+		}
+		version, err := repo.Apply(context.Background(), cmd)
+		assert.Nil(t, err)
+		assert.Equal(t, 0, version)
+	})
 }
