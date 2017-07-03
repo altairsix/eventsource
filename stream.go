@@ -17,3 +17,11 @@ type StreamReader interface {
 	// offset
 	Read(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error)
 }
+
+// StreamReaderFunc provides an func alternative for declaring a StreamReader
+type StreamReaderFunc func(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error)
+
+// Read implements the StreamReader.Read interface
+func (fn StreamReaderFunc) Read(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error) {
+	return fn(ctx, startingOffset, recordCount)
+}
