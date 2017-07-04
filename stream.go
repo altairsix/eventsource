@@ -5,7 +5,7 @@ import "context"
 // StreamRecord provides a serialized version of the event stream
 type StreamRecord struct {
 	Record
-	Offset      int64
+	Offset      uint64
 	AggregateID string
 }
 
@@ -15,13 +15,13 @@ type StreamRecord struct {
 type StreamReader interface {
 	// Read reads the next recordCount records from the event store starting at the specified
 	// offset
-	Read(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error)
+	Read(ctx context.Context, startingOffset uint64, recordCount int) ([]StreamRecord, error)
 }
 
 // StreamReaderFunc provides an func alternative for declaring a StreamReader
-type StreamReaderFunc func(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error)
+type StreamReaderFunc func(ctx context.Context, startingOffset uint64, recordCount int) ([]StreamRecord, error)
 
 // Read implements the StreamReader.Read interface
-func (fn StreamReaderFunc) Read(ctx context.Context, startingOffset int64, recordCount int) ([]StreamRecord, error) {
+func (fn StreamReaderFunc) Read(ctx context.Context, startingOffset uint64, recordCount int) ([]StreamRecord, error) {
 	return fn(ctx, startingOffset, recordCount)
 }

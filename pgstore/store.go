@@ -159,7 +159,7 @@ func (s *Store) doLoad(ctx context.Context, db DB, aggregateID string, initialVe
 	return history, nil
 }
 
-func (s *Store) Read(ctx context.Context, startingOffset int64, recordCount int) ([]eventsource.StreamRecord, error) {
+func (s *Store) Read(ctx context.Context, startingOffset uint64, recordCount int) ([]eventsource.StreamRecord, error) {
 	db, err := s.accessor.Open(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "load failed; unable to connect to db")
