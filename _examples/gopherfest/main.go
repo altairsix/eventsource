@@ -95,17 +95,16 @@ func main() {
 			OrderShipped{},
 		)),
 	)
-	dispatcher := eventsource.NewDispatcher(repo)
 
 	id := strconv.FormatInt(time.Now().UnixNano(), 36)
 	ctx := context.Background()
 
-	err = dispatcher.Dispatch(ctx, &CreateOrder{
+	_, err = repo.Apply(ctx, &CreateOrder{
 		CommandModel: eventsource.CommandModel{ID: id},
 	})
 	check(err)
 
-	err = dispatcher.Dispatch(ctx, &ShipOrder{
+	_, err = repo.Apply(ctx, &ShipOrder{
 		CommandModel: eventsource.CommandModel{ID: id},
 	})
 	check(err)
