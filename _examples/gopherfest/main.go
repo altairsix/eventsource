@@ -106,12 +106,12 @@ func main() {
 	id := strconv.FormatInt(time.Now().UnixNano(), 36)
 	ctx := context.Background()
 
-	err = repo.Dispatch(ctx, &CreateOrder{
+	_, err = repo.Apply(ctx, &CreateOrder{
 		CommandModel: eventsource.CommandModel{ID: id},
 	})
 	check(err)
 
-	err = repo.Dispatch(ctx, &ShipOrder{
+	_, err = repo.Apply(ctx, &ShipOrder{
 		CommandModel: eventsource.CommandModel{ID: id},
 	})
 	check(err)
