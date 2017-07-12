@@ -5,6 +5,9 @@
 *.ipr
 *.iws
 
+# ignore vs files
+.vscode
+
 # ignore local configs
 #
 *.env
