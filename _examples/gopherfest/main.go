@@ -11,6 +11,7 @@ import (
 	"github.com/altairsix/eventsource/dynamodbstore"
 )
 
+//Order is an example of state generated from left fold of events
 type Order struct {
 	ID        string
 	Version   int
@@ -19,14 +20,17 @@ type Order struct {
 	State     string
 }
 
+//OrderCreated event used a marker of order created
 type OrderCreated struct {
 	eventsource.Model
 }
 
+//OrderShipped event used a marker of order shipped
 type OrderShipped struct {
 	eventsource.Model
 }
 
+//On implements Aggregate interface
 func (item *Order) On(event eventsource.Event) error {
 	switch v := event.(type) {
 	case *OrderCreated:
@@ -46,14 +50,17 @@ func (item *Order) On(event eventsource.Event) error {
 	return nil
 }
 
+//CreateOrder command
 type CreateOrder struct {
 	eventsource.CommandModel
 }
 
+//ShipOrder command
 type ShipOrder struct {
 	eventsource.CommandModel
 }
 
+//Apply implements the CommandHandler interface
 func (item *Order) Apply(ctx context.Context, command eventsource.Command) ([]eventsource.Event, error) {
 	switch v := command.(type) {
 	case *CreateOrder:
@@ -95,17 +102,16 @@ func main() {
 			OrderShipped{},
 		)),
 	)
-	dispatcher := eventsource.NewDispatcher(repo)
 
 	id := strconv.FormatInt(time.Now().UnixNano(), 36)
 	ctx := context.Background()
 
-	err = dispatcher.Dispatch(ctx, &CreateOrder{
+	_, err = repo.Apply(ctx, &CreateOrder{
 		CommandModel: eventsource.CommandModel{ID: id},
 	})
 	check(err)
 
-	err = dispatcher.Dispatch(ctx, &ShipOrder{
+	_, err = repo.Apply(ctx, &ShipOrder{
 		CommandModel: eventsource.CommandModel{ID: id},
 	})
 	check(err)
