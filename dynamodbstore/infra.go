@@ -44,10 +44,9 @@ func MakeCreateTableInput(tableName string, readCapacity, writeCapacity int64, o
 			ReadCapacityUnits:  aws.Int64(readCapacity),
 			WriteCapacityUnits: aws.Int64(writeCapacity),
 		},
-		StreamSpecification:&dynamodb.StreamSpecification{
+		StreamSpecification: &dynamodb.StreamSpecification{
 			StreamEnabled:  aws.Bool(true),
 			StreamViewType: aws.String("NEW_AND_OLD_IMAGES"),
-
 		},
 	}
 
