@@ -1,14 +1,15 @@
 package scenario_test
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
-	"context"
-
 	"github.com/altairsix/eventsource"
 	"github.com/altairsix/eventsource/scenario"
+	"github.com/stretchr/testify/assert"
 )
 
 //Order is an example of state generated from left fold of events
@@ -61,12 +62,54 @@ type ShipOrder struct {
 }
 
 func (item *Order) Apply(ctx context.Context, command eventsource.Command) ([]eventsource.Event, error) {
-	return nil, nil
+	switch v := command.(type) {
+	case *CreateOrder:
+		orderCreated := &OrderCreated{
+			Model: eventsource.Model{ID: command.AggregateID(), Version: item.Version + 1, At: time.Now()},
+		}
+		return []eventsource.Event{orderCreated}, nil
+
+	case *ShipOrder:
+		if item.State != "created" {
+			return nil, fmt.Errorf("order, %v, has already shipped", command.AggregateID())
+		}
+		orderShipped := &OrderShipped{
+			Model: eventsource.Model{ID: command.AggregateID(), Version: item.Version + 1, At: time.Now()},
+		}
+		return []eventsource.Event{orderShipped}, nil
+
+	default:
+		return nil, fmt.Errorf("unhandled command, %v", v)
+	}
 }
 
 func TestSimpleScenario(t *testing.T) {
 	scenario.New(t, &Order{}).
 		Given().
 		When(&CreateOrder{}).
-		Then()
+		Then(&OrderCreated{})
+}
+
+type Errors struct {
+	Messages []string
+}
+
+func (e *Errors) Errorf(format string, args ...interface{}) {
+	e.Messages = append(e.Messages, fmt.Sprintf(format, args...))
+}
+
+func TestFieldError(t *testing.T) {
+	errs := &Errors{}
+	id := "abc"
+	scenario.New(errs, &Order{}).
+		Given().
+		When(
+			&CreateOrder{CommandModel: eventsource.CommandModel{ID: id}},
+		).
+		Then(
+			&OrderCreated{Model: eventsource.Model{ID: id + "junk"}},
+		)
+
+	assert.Len(t, errs.Messages, 1)
+	assert.True(t, strings.Contains(errs.Messages[0], "junk"))
 }
