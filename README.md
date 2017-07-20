@@ -105,6 +105,17 @@ export DYNAMODB_ENDPOINT=http://localhost:8080
 go test ./...
 ```
 
+## Testing
+
+The ```scenario``` package simplifies testing.
+
+```go
+    scenario.New(t, &Order{}).  // &Order{} implements both Aggregate and CommandHandler
+        Given().                // an initial set of events
+        When(&CreateOrder{}).   // command is applied
+        Then(&OrderCreated{})   // expect the following events to be emitted
+```
+
 ### Todo 
 
 - [ ] document singleton usage
