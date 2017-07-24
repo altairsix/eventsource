@@ -166,23 +166,48 @@ func (r *Registry) Release(ctx context.Context, resource Resource) error {
 	return err
 }
 
+// reserve determines whether the command is requesting a reservation and if it does, it performs the reservation
+func (r *Registry) reserve(ctx context.Context, cmd eventsource.Command) error {
+	v, ok := cmd.(Interface)
+	if !ok {
+		return nil
+	}
+
+	resource, duration := v.Reserve()
+	err := r.Reserve(ctx, resource, duration)
+	if err != nil {
+		if v, ok := err.(awserr.Error); ok && v.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+			return eventsource.NewError(err, ErrIsAlreadyReserved, "%v resource already exists, %v", resource.Type, resource.ID)
+		}
+		return err
+	}
+
+	return nil
+}
+
 // Wrap wraps a dispatcher with the singleton handler and returns a new dispatcher.
 // If any command implements singleton.Interface, the wrapped dispatcher will
 // attempt to reserve the specified resource for
 func (r *Registry) Wrap(dispatcher Dispatcher) Dispatcher {
 	return DispatcherFunc(func(ctx context.Context, command eventsource.Command) error {
-		if v, ok := command.(Interface); ok {
-			resource, duration := v.Reserve()
-			err := r.Reserve(ctx, resource, duration)
-			if err != nil {
-				if v, ok := err.(awserr.Error); ok && v.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-					return eventsource.NewError(err, ErrIsAlreadyReserved, "%v resource already exists, %v", resource.Type, resource.ID)
-				}
-				return err
-			}
+		if err := r.reserve(ctx, command); err != nil {
+			return err
 		}
 
 		return dispatcher.Dispatch(ctx, command)
+	})
+}
+
+// WrapRepository wraps an *eventsource.Repository and returns a new Repository that implements the Apply method.
+// If any command implements singleton.Interface, the wrapped dispatcher will
+// attempt to reserve the specified resource for
+func (r *Registry) WrapRepository(repo Repository) Repository {
+	return RepositoryFunc(func(ctx context.Context, command eventsource.Command) (int, error) {
+		if err := r.reserve(ctx, command); err != nil {
+			return 0, err
+		}
+
+		return repo.Apply(ctx, command)
 	})
 }
 

@@ -10,7 +10,7 @@ Take advantage of the scalability, high availability, clustering, and strong
 security model you've come to know and love with AWS.
  
 Serverless and accessible were significant design considerations in the creation of this 
-library.  What AWS can handled, I'd rather have AWS handle.
+library.  What AWS can handle, I'd rather have AWS handle.
 
 ## Installation
 
@@ -103,6 +103,17 @@ To run the tests locally, execute the following:
 docker-compose up
 export DYNAMODB_ENDPOINT=http://localhost:8080
 go test ./...
+```
+
+## Testing
+
+The ```scenario``` package simplifies testing.
+
+```go
+    scenario.New(t, &Order{}).  // &Order{} implements both Aggregate and CommandHandler
+        Given().                // an initial set of events
+        When(&CreateOrder{}).   // command is applied
+        Then(&OrderCreated{})   // expect the following events to be emitted
 ```
 
 ### Todo 
