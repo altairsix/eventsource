@@ -61,7 +61,7 @@ func (r Resource) Key() string {
 }
 
 // Interface provides the interface that Commands must implement to be picked up
-// by the singleston registry
+// by the singleton registry
 type Interface interface {
 	eventsource.Command
 	Reserve() (Resource, time.Duration)
