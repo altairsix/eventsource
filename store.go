@@ -84,5 +84,5 @@ func (m *memoryStore) Load(ctx context.Context, aggregateID string, fromVersion,
 		}
 	}
 
-	return all, nil
+	return history, nil
 }
