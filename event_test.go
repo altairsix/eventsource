@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/altairsix/eventsource"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
 )
 
 func TestEvent(t *testing.T) {

@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/altairsix/eventsource"
 	apex "github.com/apex/go-apex/dynamo"
+	"github.com/vancelongwill/eventsource"
 )
 
 // Changes returns an ordered list of changes from the *dynamodbstore.Record; will never return nil

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/mysqlstore"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/mysqlstore"
 )
 
 type Accessor struct {

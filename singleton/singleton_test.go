@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/awscloud"
-	"github.com/altairsix/eventsource/dynamodbstore"
-	"github.com/altairsix/eventsource/singleton"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/awscloud"
+	"github.com/vancelongwill/eventsource/dynamodbstore"
+	"github.com/vancelongwill/eventsource/singleton"
 )
 
 func TestRegistry_Lifecycle(t *testing.T) {

@@ -3,8 +3,8 @@ package awscloud_test
 import (
 	"testing"
 
-	"github.com/altairsix/eventsource/awscloud"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource/awscloud"
 )
 
 func TestDynamoDB(t *testing.T) {

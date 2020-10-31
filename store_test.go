@@ -5,8 +5,8 @@ import (
 
 	"sort"
 
-	"github.com/altairsix/eventsource"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
 )
 
 func TestHistory_Swap(t *testing.T) {

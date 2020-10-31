@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/altairsix/eventsource"
 	"github.com/gogo/protobuf/proto"
+	"github.com/vancelongwill/eventsource"
 )
 
 type serializer struct {
@@ -43,7 +43,7 @@ func (s *serializer) MarshalEvent(event eventsource.Event) (eventsource.Record, 
 }
 
 func (s *serializer) UnmarshalEvent(record eventsource.Record) (eventsource.Event, error) {
-	container := &ShoppingCart{};
+	container := &ShoppingCart{}
 	err := proto.Unmarshal(record.Data, container)
 	if err != nil {
 		return nil, err
@@ -76,4 +76,3 @@ func (m *ItemAdded) EventAt() time.Time  { return time.Unix(m.At, 0) }
 func (m *ItemRemoved) AggregateID() string { return m.Id }
 func (m *ItemRemoved) EventVersion() int   { return int(m.Version) }
 func (m *ItemRemoved) EventAt() time.Time  { return time.Unix(m.At, 0) }
-

@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/dynamodbstore"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/dynamodbstore"
 )
 
 // UserCreated defines a user creation event

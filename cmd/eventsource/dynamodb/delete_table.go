@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/altairsix/eventsource/awscloud"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/vancelongwill/eventsource/awscloud"
 	"gopkg.in/urfave/cli.v1"
 )
 

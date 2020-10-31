@@ -6,12 +6,12 @@ import (
 	"math"
 	"time"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/awscloud"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/awscloud"
 )
 
 const (

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/scenario"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/scenario"
 )
 
 //Order is an example of state generated from left fold of events

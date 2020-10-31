@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.8
+  - 1.15
 
 install:
   - go get github.com/apex/go-apex

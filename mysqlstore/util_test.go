@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/altairsix/eventsource/mysqlstore"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource/mysqlstore"
 )
 
 var (
