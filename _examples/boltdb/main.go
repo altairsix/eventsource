@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/boltdbstore"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/boltdbstore"
 )
 
 //Order is an example of state generated from left fold of events

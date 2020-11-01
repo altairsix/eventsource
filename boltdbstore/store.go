@@ -13,9 +13,9 @@ import (
 
 	"strings"
 
-	"github.com/altairsix/eventsource"
 	"github.com/boltdb/bolt"
 	"github.com/pkg/errors"
+	"github.com/vancelongwill/eventsource"
 )
 
 var (

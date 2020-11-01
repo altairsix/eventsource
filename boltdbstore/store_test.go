@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/boltdbstore"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/boltdbstore"
 )
 
 func withTestDB(t *testing.T, test func(store *boltdbstore.Store, ctx context.Context)) {
