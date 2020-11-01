@@ -1,0 +1,19 @@
+syntax = "proto3";
+package pb;
+option go_package = ".;pb";
+
+import "google/protobuf/timestamp.proto";
+
+message OrderCreated {
+  string order_id = 1;
+  google.protobuf.Timestamp at = 2;
+  int32 version = 3;
+  string user_id = 4;
+}
+
+message OrderShipped {
+  string order_id = 1;
+  google.protobuf.Timestamp at = 2;
+  int32 version = 3;
+  string destination = 4;
+}
