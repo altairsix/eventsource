@@ -6,9 +6,9 @@ import (
 
 	"os"
 
-	"github.com/altairsix/eventsource/awscloud"
-	"github.com/altairsix/eventsource/dynamodbstore"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/vancelongwill/eventsource/awscloud"
+	"github.com/vancelongwill/eventsource/dynamodbstore"
 	"gopkg.in/urfave/cli.v1"
 )
 

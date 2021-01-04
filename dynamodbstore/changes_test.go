@@ -3,11 +3,11 @@ package dynamodbstore_test
 import (
 	"testing"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/dynamodbstore"
 	apex "github.com/apex/go-apex/dynamo"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/dynamodbstore"
 )
 
 func TestRawEvents(t *testing.T) {

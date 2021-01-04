@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/altairsix/eventsource"
+	"github.com/vancelongwill/eventsource"
 )
 
 // UserCreated defines a user creation event

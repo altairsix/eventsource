@@ -1,4 +1,4 @@
-[![GoDoc](https://godoc.org/github.com/altairsix/eventsource?status.svg)](https://godoc.org/github.com/altairsix/eventsource) ![Travis CI](https://travis-ci.org/altairsix/eventsource.svg?branch=master) 
+[![GoDoc](https://godoc.org/github.com/vancelongwill/eventsource?status.svg)](https://godoc.org/github.com/vancelongwill/eventsource) ![Travis CI](https://travis-ci.org/altairsix/eventsource.svg?branch=master) 
 
 ```eventsource``` is a Serverless event sourcing library for Go that attempts to 
 leverage the capabilities of AWS to simplify the development and operational 
@@ -15,7 +15,7 @@ library.  What AWS can handle, I'd rather have AWS handle.
 ## Installation
 
 ```
-go get github.com/altairsix/eventsource/...
+go get github.com/vancelongwill/eventsource/...
 ```
 
 ## Getting Started

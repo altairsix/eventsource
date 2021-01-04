@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/altairsix/eventsource"
-	"github.com/altairsix/eventsource/awscloud"
-	"github.com/altairsix/eventsource/dynamodbstore"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
+	"github.com/vancelongwill/eventsource/awscloud"
+	"github.com/vancelongwill/eventsource/dynamodbstore"
 )
 
 func TestStore_ImplementsStore(t *testing.T) {

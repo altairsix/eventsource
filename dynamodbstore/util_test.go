@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/altairsix/eventsource/dynamodbstore"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource/dynamodbstore"
 )
 
 var (

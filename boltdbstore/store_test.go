@@ -1,4 +1,4 @@
-package mysqlstore_test
+package boltdbstore_test
 
 import (
 	"context"
@@ -6,51 +6,39 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vancelongwill/eventsource"
-	"github.com/vancelongwill/eventsource/mysqlstore"
+	"github.com/vancelongwill/eventsource/boltdbstore"
 )
 
-type Accessor struct {
-	db mysqlstore.DB
-}
-
-func (a Accessor) Open(ctx context.Context) (mysqlstore.DB, error) {
-	return a.db, nil
-}
-
-func (a Accessor) Close(db mysqlstore.DB) error {
-	return nil
-}
-
-func TestStore_ImplementsStore(t *testing.T) {
-	v, err := mysqlstore.New("blah", nil)
+func withTestDB(t *testing.T, test func(store *boltdbstore.Store, ctx context.Context)) {
+	ctx := context.Background()
+	store, err := boltdbstore.New("test")
 	assert.Nil(t, err)
-
-	var store eventsource.Store = v
-	assert.NotNil(t, store)
+	test(store, ctx)
+	store.Delete()
+}
+func TestStore_ImplementsStore(t *testing.T) {
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
+		var v eventsource.Store = store
+		assert.NotNil(t, v)
+	})
 }
 
 func TestStore_ImplementsStreamReader(t *testing.T) {
-	v, err := mysqlstore.New("blah", nil)
-	assert.Nil(t, err)
-
-	var reader eventsource.StreamReader = v
-	assert.NotNil(t, reader)
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
+		var reader eventsource.StreamReader = store
+		assert.NotNil(t, reader)
+	})
 }
 
 func TestStore_SaveEmpty(t *testing.T) {
-	s, err := mysqlstore.New("blah", nil)
-	assert.Nil(t, err)
-
-	err = s.Save(context.Background(), "abc")
-	assert.Nil(t, err, "no records saved; guaranteed to work")
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
+		err := store.Save(context.Background(), "abc")
+		assert.Nil(t, err, "no records saved; guaranteed to work")
+	})
 }
 
 func TestStore_SaveAndFetch(t *testing.T) {
-	WithRollback(t, func(db DB, tableName string) {
-		ctx := context.Background()
-		store, err := mysqlstore.New(tableName, Accessor{db: db})
-		assert.Nil(t, err)
-
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
 		aggregateID := "abc"
 		history := eventsource.History{
 			{
@@ -66,7 +54,7 @@ func TestStore_SaveAndFetch(t *testing.T) {
 				Data:    []byte("c"),
 			},
 		}
-		err = store.Save(ctx, aggregateID, history...)
+		err := store.Save(ctx, aggregateID, history...)
 		assert.Nil(t, err)
 
 		found, err := store.Load(ctx, aggregateID, 0, 0)
@@ -77,11 +65,7 @@ func TestStore_SaveAndFetch(t *testing.T) {
 }
 
 func TestStore_SaveAndRead(t *testing.T) {
-	WithRollback(t, func(db DB, tableName string) {
-		ctx := context.Background()
-		store, err := mysqlstore.New(tableName, Accessor{db: db})
-		assert.Nil(t, err)
-
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
 		aggregateID := "abc"
 		history := eventsource.History{
 			{
@@ -97,7 +81,7 @@ func TestStore_SaveAndRead(t *testing.T) {
 				Data:    []byte("c"),
 			},
 		}
-		err = store.Save(ctx, aggregateID, history...)
+		err := store.Save(ctx, aggregateID, history...)
 		assert.Nil(t, err)
 
 		found, err := store.Read(ctx, 0, len(history))
@@ -114,11 +98,7 @@ func TestStore_SaveAndRead(t *testing.T) {
 }
 
 func TestStore_SaveIdempotent(t *testing.T) {
-	WithRollback(t, func(db DB, tableName string) {
-		ctx := context.Background()
-		store, err := mysqlstore.New(tableName, Accessor{db: db})
-		assert.Nil(t, err)
-
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
 		aggregateID := "abc"
 		history := eventsource.History{
 			{
@@ -135,7 +115,7 @@ func TestStore_SaveIdempotent(t *testing.T) {
 			},
 		}
 		// initial save
-		err = store.Save(ctx, aggregateID, history...)
+		err := store.Save(ctx, aggregateID, history...)
 		assert.Nil(t, err)
 
 		// When - save it again
@@ -151,12 +131,7 @@ func TestStore_SaveIdempotent(t *testing.T) {
 }
 
 func TestStore_SaveOptimisticLock(t *testing.T) {
-	ctx := context.Background()
-
-	WithRollback(t, func(db DB, tableName string) {
-		store, err := mysqlstore.New(tableName, Accessor{db: db})
-		assert.Nil(t, err)
-
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
 		aggregateID := "abc"
 		initial := eventsource.History{
 			{
@@ -169,7 +144,7 @@ func TestStore_SaveOptimisticLock(t *testing.T) {
 			},
 		}
 		// initial save
-		err = store.Save(ctx, aggregateID, initial...)
+		err := store.Save(ctx, aggregateID, initial...)
 		assert.Nil(t, err)
 
 		overlap := eventsource.History{
@@ -189,10 +164,7 @@ func TestStore_SaveOptimisticLock(t *testing.T) {
 }
 
 func TestStore_LoadPartition(t *testing.T) {
-	WithRollback(t, func(db DB, tableName string) {
-		store, err := mysqlstore.New(tableName, Accessor{db: db})
-		assert.Nil(t, err)
-
+	withTestDB(t, func(store *boltdbstore.Store, ctx context.Context) {
 		aggregateID := "abc"
 		history := eventsource.History{
 			{
@@ -208,8 +180,7 @@ func TestStore_LoadPartition(t *testing.T) {
 				Data:    []byte("c"),
 			},
 		}
-		ctx := context.Background()
-		err = store.Save(ctx, aggregateID, history...)
+		err := store.Save(ctx, aggregateID, history...)
 		assert.Nil(t, err)
 
 		found, err := store.Load(ctx, aggregateID, 0, 1)

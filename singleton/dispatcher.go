@@ -3,7 +3,7 @@ package singleton
 import (
 	"context"
 
-	"github.com/altairsix/eventsource"
+	"github.com/vancelongwill/eventsource"
 )
 
 // Dispatcher represents a function to execute a command

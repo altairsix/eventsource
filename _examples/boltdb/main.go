@@ -1,15 +1,14 @@
-package scenario_test
+package main
 
 import (
 	"context"
 	"fmt"
-	"strings"
-	"testing"
+	"log"
+	"strconv"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/vancelongwill/eventsource"
-	"github.com/vancelongwill/eventsource/scenario"
+	"github.com/vancelongwill/eventsource/boltdbstore"
 )
 
 //Order is an example of state generated from left fold of events
@@ -61,6 +60,7 @@ type ShipOrder struct {
 	eventsource.CommandModel
 }
 
+//Apply implements the CommandHandler interface
 func (item *Order) Apply(ctx context.Context, command eventsource.Command) ([]eventsource.Event, error) {
 	switch v := command.(type) {
 	case *CreateOrder:
@@ -83,33 +83,40 @@ func (item *Order) Apply(ctx context.Context, command eventsource.Command) ([]ev
 	}
 }
 
-func TestSimpleScenario(t *testing.T) {
-	scenario.New(t, &Order{}).
-		Given().
-		When(&CreateOrder{}).
-		Then(&OrderCreated{})
+func check(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
-type Errors struct {
-	Messages []string
-}
+func main() {
+	store, err := boltdbstore.New("orders")
+	check(err)
 
-func (e *Errors) Errorf(format string, args ...interface{}) {
-	e.Messages = append(e.Messages, fmt.Sprintf(format, args...))
-}
+	repo := eventsource.New(&Order{},
+		eventsource.WithStore(store),
+		eventsource.WithSerializer(eventsource.NewJSONSerializer(
+			OrderCreated{},
+			OrderShipped{},
+		)),
+	)
 
-func TestFieldError(t *testing.T) {
-	errs := &Errors{}
-	id := "abc"
-	scenario.New(errs, &Order{}).
-		Given().
-		When(
-			&CreateOrder{CommandModel: eventsource.CommandModel{ID: id}},
-		).
-		Then(
-			&OrderCreated{Model: eventsource.Model{ID: id + "junk"}},
-		)
+	id := strconv.FormatInt(time.Now().UnixNano(), 36)
+	ctx := context.Background()
 
-	assert.Len(t, errs.Messages, 1)
-	assert.True(t, strings.Contains(errs.Messages[0], "junk"))
+	_, err = repo.Apply(ctx, &CreateOrder{
+		CommandModel: eventsource.CommandModel{ID: id},
+	})
+	check(err)
+
+	_, err = repo.Apply(ctx, &ShipOrder{
+		CommandModel: eventsource.CommandModel{ID: id},
+	})
+	check(err)
+
+	aggregate, err := repo.Load(ctx, id)
+	check(err)
+
+	found := aggregate.(*Order)
+	fmt.Printf("Order %v [version %v] %v %v\n", found.ID, found.Version, found.State, found.UpdatedAt.Format(time.RFC822))
 }

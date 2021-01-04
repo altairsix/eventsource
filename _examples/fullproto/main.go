@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/vancelongwill/eventsource"
-	"github.com/vancelongwill/eventsource/dynamodbstore"
+	"github.com/vancelongwill/eventsource/_examples/fullproto/pb"
+	"github.com/vancelongwill/eventsource/boltdbstore"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 //Order is an example of state generated from left fold of events
@@ -22,13 +24,21 @@ type Order struct {
 
 //OrderCreated event used a marker of order created
 type OrderCreated struct {
-	eventsource.Model
+	*pb.OrderCreated
 }
 
-//OrderShipped event used a marker of order shipped
+func (o OrderCreated) AggregateID() string { return o.OrderId }
+func (o OrderCreated) EventVersion() int   { return int(o.Version) }
+func (o OrderCreated) EventAt() time.Time  { return o.At.AsTime() }
+
+// OrderShipped event used a marker of order shipped
 type OrderShipped struct {
-	eventsource.Model
+	*pb.OrderShipped
 }
+
+func (o OrderShipped) AggregateID() string { return o.OrderId }
+func (o OrderShipped) EventVersion() int   { return int(o.Version) }
+func (o OrderShipped) EventAt() time.Time  { return o.At.AsTime() }
 
 //On implements Aggregate interface
 func (item *Order) On(event eventsource.Event) error {
@@ -65,7 +75,9 @@ func (item *Order) Apply(ctx context.Context, command eventsource.Command) ([]ev
 	switch v := command.(type) {
 	case *CreateOrder:
 		orderCreated := &OrderCreated{
-			Model: eventsource.Model{ID: command.AggregateID(), Version: item.Version + 1, At: time.Now()},
+			&pb.OrderCreated{
+				OrderId: command.AggregateID(), Version: int32(item.Version + 1), At: timestamppb.New(time.Now()),
+			},
 		}
 		return []eventsource.Event{orderCreated}, nil
 
@@ -74,7 +86,9 @@ func (item *Order) Apply(ctx context.Context, command eventsource.Command) ([]ev
 			return nil, fmt.Errorf("order, %v, has already shipped", command.AggregateID())
 		}
 		orderShipped := &OrderShipped{
-			Model: eventsource.Model{ID: command.AggregateID(), Version: item.Version + 1, At: time.Now()},
+			&pb.OrderShipped{
+				OrderId: command.AggregateID(), Version: int32(item.Version + 1), At: timestamppb.New(time.Now()),
+			},
 		}
 		return []eventsource.Event{orderShipped}, nil
 
@@ -90,14 +104,12 @@ func check(err error) {
 }
 
 func main() {
-	store, err := dynamodbstore.New("orders",
-		dynamodbstore.WithRegion("us-west-2"),
-	)
+	store, err := boltdbstore.New("orders")
 	check(err)
 
 	repo := eventsource.New(&Order{},
 		eventsource.WithStore(store),
-		eventsource.WithSerializer(eventsource.NewJSONSerializer(
+		eventsource.WithSerializer(eventsource.NewProtoSerializer(
 			OrderCreated{},
 			OrderShipped{},
 		)),

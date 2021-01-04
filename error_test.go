@@ -6,9 +6,9 @@ import (
 
 	"fmt"
 
-	"github.com/altairsix/eventsource"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/vancelongwill/eventsource"
 )
 
 func TestNewError(t *testing.T) {
